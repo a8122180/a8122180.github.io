@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>本の登録</title>
+        <link rel="stylesheet" href="styles.css" />
+        <script type="text/javascript" src="lib/jquery.min.js"></script>
+        <script type="text/javascript" src="lib/osql.js"></script>
+        <script>
+            osql.requireLogin();
+    
+            var me;
+    
+            $(document).ready(async function () {
+                me = await osql.getMe();
+                document.getElementById('firstname').innerHTML = me.fname;
+                document.getElementById('lastname').innerHTML = me.lname;
+    
+                await refreshBooks();
+                setInterval(refreshBooks, 2000);
+            });
+
+            async function insertBook() {
+            var bookTitle = document.getElementById('bookTitle').value;
+            var bookAuthor = document.getElementById('bookAuthor').value;
+            var sql = "INSERT INTO books (name, author) VALUES ('" + bookTitle + "', '" + bookAuthor + "');";
+            console.log("生成されたSQLクエリ:", sql);
+            osql.connectInsert(sql);
+            refreshBooks();
+        }
+
+        async function refreshBooks() {
+            var sql = 'select * from books;';
+            var objects = await osql.connect(sql);
+            console.log(objects);
+            var html = '';
+            html = '<tr><th>ID</th><th>タイトル</th><th>著者</th></tr>'
+            for (var i = 0; i < objects.length; i++) {
+                html = html + '<tr>';
+                var object = objects[i];
+                html = html + `<td>${object.id}</td>`;
+                html = html + `<td>${object.name}</td>`;
+                html = html + `<td>${object.author}</td>`;
+                html = html + '</tr>';
+            }
+            document.getElementById('books').innerHTML = html;
+        }
+
+            function logout() {
+                osql.logout();
+            }
+        </script>
+    </head>
+    <body>
+        <div style="text-align: right">
+            ようこそ<span id="lastname"></span> <span id="firstname"></span>さん
+            <a href="javascript:logout()">logout</a>
+        </div>
+        <div class="container">
+            <h1>本の登録</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html">ホーム</a></li>
+                    <li><a href="users.html">利用者登録</a></li>
+                    <li><a href="books.html">本の登録</a></li>
+                    <li><a href="borrows.html">貸出管理</a></li>
+                    <li><a href="return.html">返却管理</a></li>
+                </ul>
+            </nav>
+
+            <!-- 本の追加 -->
+            <h2>本の追加</h2>
+                <label for="bookTitle">本のタイトル:</label>
+                <input type="text" id="bookTitle" name="bookTitle" required />
+                <label for="bookAuthor">著者:</label>
+                <input type="text" id="bookAuthor" name="bookAuthor" required />
+                <button onclick="insertBook()">本を追加</button>
+
+            <h3>保存された本</h3>
+            <table id="databaseTable">
+                <tbody id="books"></tbody>
+            </table>
+        </div>
+    </body>
+</html>

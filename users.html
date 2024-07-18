@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>利用者登録</title>
+        <link rel="stylesheet" href="styles.css" />
+        <script type="text/javascript" src="lib/jquery.min.js"></script>
+        <script type="text/javascript" src="lib/osql.js"></script>
+        
+
+    <script>
+        osql.requireLogin();
+
+        var me;
+
+        $(document).ready(async function () {
+            me = await osql.getMe();
+            document.getElementById('firstname').innerHTML = me.fname;
+            document.getElementById('lastname').innerHTML = me.lname;
+
+            await refreshUsers();
+            setInterval(refreshUsers, 2000);
+        });
+
+        async function insertUser() {
+            var username = document.getElementById('username').value;
+            var sql = "INSERT INTO users (name) VALUES ('" + username + "');";
+            console.log("生成されたSQLクエリ:", sql);
+            osql.connectInsert(sql);
+            refreshUsers();
+        }
+
+        async function refreshUsers() {
+            var sql = 'select * from users;';
+            var objects = await osql.connect(sql);
+            console.log(objects);
+            var html = '';
+            html = '<tr><th>ID</th><th>利用者</th></tr>'
+            for (var i = 0; i < objects.length; i++) {
+                html = html + '<tr>';
+                var object = objects[i];
+                html = html + `<td>${object.id}</td>`;
+                html = html + `<td>${object.name}</td>`;
+                html = html + '</tr>';
+            }
+            document.getElementById('users').innerHTML = html;
+        }
+        
+
+        function logout() {
+                osql.logout();
+            }
+
+        </script>
+    </head>
+    <body>
+        <div style="text-align: right">
+            ようこそ<span id="lastname"></span> <span id="firstname"></span>さん
+            <a href="javascript:logout()">logout</a>
+        </div>
+        <div class="container">
+            <h1>利用者登録</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html">ホーム</a></li>
+                    <li><a href="users.html">利用者登録</a></li>
+                    <li><a href="books.html">本の登録</a></li>
+                    <li><a href="borrows.html">貸出管理</a></li>
+                    <li><a href="return.html">返却管理</a></li>
+                </ul>
+            </nav>
+
+            <!-- 利用者の追加 -->
+            <h2>利用者の追加</h2>
+            
+                <label for="username">利用者名:</label>
+                <input type="text" id="username" name="username" required />
+                <button onclick="insertUser()">利用者を追加</button>
+
+            <h3>保存された利用者</h3>
+            <table id="databaseTable">
+                <tbody id="users"></tbody>
+            </table>
+        </div>
+    </body>
+</html>

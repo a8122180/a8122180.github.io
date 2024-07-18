@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+        <title>図書館貸出管理システム</title>
+        <link rel="stylesheet" href="styles.css" />
+        <script type="text/javascript" src="lib/jquery.min.js"></script>
+        <script type="text/javascript" src="lib/osql.js"></script>
+        <script>
+            osql.requireLogin();
+
+            var me;
+
+            $(document).ready(async function () {
+                me = await osql.getMe();
+                document.getElementById('firstname').innerHTML = me.fname;
+                document.getElementById('lastname').innerHTML = me.lname;
+
+                await refreshBorrowing();
+                setInterval(refreshBorrowing, 2000);
+            });
+
+            async function refreshBorrowing() {
+            var sql = 'SELECT borrowed_books.id, users.name AS user_name, books.name AS book_name, books.author AS book_author, borrowed_books.date FROM borrowed_books JOIN users ON borrowed_books.user_id = users.id JOIN books ON borrowed_books.book_id = books.id;';
+            var objects = await osql.connect(sql);
+            console.log(objects);
+            var html = '';
+            html = '<tr><th>貸出ID</th><th>利用者</th><th>本のタイトル</th><th>著者</th><th>貸出期限</th></tr>'
+            for (var i = 0; i < objects.length; i++) {
+                html = html + '<tr>';
+                var object = objects[i];
+                html = html + `<td>${object.id}</td>`;
+                html = html + `<td>${object.user_name}</td>`;
+                html = html + `<td>${object.book_name}</td>`;
+                html = html + `<td>${object.book_author}</td>`;
+                html = html + `<td>${object.date}</td>`;
+                html = html + '</tr>';
+            }
+            document.getElementById('borrowing').innerHTML = html;
+            }
+
+            function logout() {
+                osql.logout();
+            }
+        </script>
+    </head>
+    <body>
+        <div style="text-align: right">
+            ようこそ<span id="lastname"></span> <span id="firstname"></span>さん
+            <a href="javascript:logout()">logout</a>
+        </div>
+        <div class="container">
+            <h1>図書館貸出管理システム</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html">ホーム</a></li>
+                    <li><a href="users.html">利用者登録</a></li>
+                    <li><a href="books.html">本の登録</a></li>
+                    <li><a href="borrows.html">貸出管理</a></li>
+                    <li><a href="return.html">返却管理</a></li>
+                </ul>
+            </nav>
+
+            <h3>貸出中一覧</h3>
+            <table id="databaseTable">
+                <tbody id="borrowing"></tbody>
+            </table>
+        </div>
+    </body>
+</html>
